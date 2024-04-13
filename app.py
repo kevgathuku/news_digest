@@ -37,6 +37,7 @@ SEARCHERS = [
     FeedSearcher("https://news.ycombinator.com/rss"),
     RedditSearcher("http://www.reddit.com/r/programming/hot.json"),
     RedditSearcher("http://www.reddit.com/r/Python/hot.json"),
+    RedditSearcher("https://www.reddit.com/r/ruby/hot.json"),
 ]
 
 
