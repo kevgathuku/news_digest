@@ -43,5 +43,5 @@ class RedditSearcher(Searcher):
         links = content["data"]["children"]
         for link in links:
             link_data = link["data"]
-            if link_data["selftext"] == "":
+            if link_data["selftext"] != "":
                 yield Link(title=link_data["title"], url=link_data["url"])
