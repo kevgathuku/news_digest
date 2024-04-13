@@ -84,11 +84,12 @@ def content_search():
     query = SearchTerm.select()
     links = []
 
-    for searcher in SEARCHERS:
+    for source in SEARCHERS:
         try:
-            results = searcher.search(query)
+            results = source.search(query)
+            logger.info("Matched %s results", len(results))
         except:
-            logger.exception("Error fetching %s", searcher.url)
+            logger.exception("Error fetching %s", source.url)
         else:
             for result in results:
                 exists = SavedLink.select().where(SavedLink.url == result.url).exists()
