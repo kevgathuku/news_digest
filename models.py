@@ -1,6 +1,8 @@
 import datetime
+import os
 import re
 from peewee import *
+from playhouse.db_url import connect
 
 from flask_admin.contrib.peewee import ModelView
 
@@ -44,7 +46,9 @@ class OrNode(Node):
 
 class BaseModel(Model):
     class Meta:
-        database = SqliteDatabase("search_terms.db")
+        database = connect(
+            os.environ.get("DATABASE_URL") or "sqlite:///search_terms.db"
+        )
 
 
 class SearchTerm(BaseModel):
