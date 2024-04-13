@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_mail import Mail, Message
 import flask_admin as admin
 from huey import RedisHuey, crontab
@@ -54,10 +54,27 @@ def send_email(subject, text_body):
     with app.app_context():
         msg = Message(
             subject,
-            recipients=app.config["MAIL_DEFAULT_RECIPIENT"],
+            body=text_body,
+            recipients=[app.config["MAIL_DEFAULT_RECIPIENT"]],
+            sender=("News Digest", app.config["MAIL_USERNAME"]),
         )
-        msg.body = text_body
         mail.send(msg)
+
+
+@app.route("/task", methods=["POST"])
+def task():
+    # Get POST data
+    data = request.get_json()
+    param = data.get("type")
+
+    if param == "email":
+        send_email("Testing the Connection", "Hello, here is your latest news digest")
+        return jsonify({"message": "Sent the email!"}), 202
+    else:
+        return (
+            jsonify({"error": 'Failed to start task. Requires search_type of "task"'}),
+            500,
+        )
 
 
 @huey.periodic_task(crontab(minute="0", hour="7"))
@@ -90,4 +107,4 @@ if __name__ == "__main__":
         SavedLink.create_table()
     except:
         pass
-    app.run(debug=True)
+    app.run(debug=True, port=8080)
