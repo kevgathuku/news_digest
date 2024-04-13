@@ -1,7 +1,8 @@
 import json
 from xml.etree import ElementTree as etree
-from urllib.request import Request, urlopen
 from collections import namedtuple
+
+import requests
 
 Link = namedtuple("Link", ("title", "url"))
 
@@ -13,9 +14,8 @@ class Searcher(object):
         self.url = url
 
     def fetch(self):
-        request = Request(self.url)
-        request.add_header("User-Agent", self.user_agent)
-        return urlopen(request).read()
+        response = requests.get(self.url, headers={"User-Agent": self.user_agent})
+        return response.content
 
     def search(self, search_terms):
         content = self.fetch()
