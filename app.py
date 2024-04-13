@@ -78,7 +78,7 @@ def task():
         )
 
 
-@huey.periodic_task(crontab(minute="12", hour="18"))
+@huey.periodic_task(crontab(minute="21", hour="05"))
 def content_search():
     logger = app.logger
     query = SearchTerm.select()
