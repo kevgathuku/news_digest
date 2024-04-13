@@ -2,10 +2,9 @@ import os
 from flask import Flask
 from flask_mail import Mail, Message
 import flask_admin as admin
-from flask_admin.contrib.peewee import ModelView
 from huey import RedisHuey, crontab
 
-from models import SavedLink, SearchTerm
+from models import SavedLink, SearchTerm, SearchTermAdmin, SavedLinkAdmin
 from searcher import FeedSearcher, RedditSearcher
 
 app = Flask(__name__)
@@ -31,23 +30,14 @@ admin = admin.Admin(app, name="News Digest")
 huey = RedisHuey("news-digest", url=app.config["REDIS_URL"])
 mail = Mail(app)
 
+admin.add_view(SearchTermAdmin(SearchTerm))
+admin.add_view(SavedLinkAdmin(SavedLink))
+
 SEARCHERS = [
     FeedSearcher("https://news.ycombinator.com/rss"),
     RedditSearcher("http://www.reddit.com/r/programming/hot.json"),
     RedditSearcher("http://www.reddit.com/r/Python/hot.json"),
 ]
-
-
-class SearchTermAdmin(ModelView):
-    pass
-
-
-class SavedLinkAdmin(ModelView):
-    pass
-
-
-admin.add_view(SearchTermAdmin(SearchTerm))
-admin.add_view(SavedLinkAdmin(SavedLink))
 
 
 @app.route("/")

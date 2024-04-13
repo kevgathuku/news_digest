@@ -2,6 +2,8 @@ import datetime
 import re
 from peewee import *
 
+from flask_admin.contrib.peewee import ModelView
+
 REGEX = r'(".+?"|\(|\s+|\))'
 
 
@@ -103,3 +105,11 @@ class SavedLink(BaseModel):
     title = CharField(max_length=255)
     url = CharField(index=True)
     timestamp = DateTimeField(default=datetime.datetime.now)
+
+
+class SearchTermAdmin(ModelView):
+    pass
+
+
+class SavedLinkAdmin(ModelView):
+    pass
