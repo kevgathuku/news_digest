@@ -20,7 +20,11 @@ class Searcher(object):
     def search(self, search_terms):
         content = self.fetch()
         for link in self.extract_links(content):
+            print(
+                f"Link title: {link.title.lower()}",
+            )
             for search_term in search_terms:
+                print(f"search_term: {search_term.parse()}")
                 if search_term.test(link.title.lower()):
                     yield link
                     break

@@ -34,7 +34,9 @@ admin.add_view(SearchTermAdmin(SearchTerm))
 admin.add_view(SavedLinkAdmin(SavedLink))
 
 SEARCHERS = [
-    FeedSearcher("https://news.ycombinator.com/rss"),
+    # TODO: Find out the problem with the feed searcher
+    # Always getting no results when it's included
+    # FeedSearcher("https://news.ycombinator.com/rss"),
     RedditSearcher("http://www.reddit.com/r/programming/hot.json"),
     RedditSearcher("http://www.reddit.com/r/Python/hot.json"),
     RedditSearcher("https://www.reddit.com/r/ruby/hot.json"),
@@ -62,24 +64,7 @@ def send_email(subject, text_body):
         mail.send(msg)
 
 
-@app.route("/task", methods=["POST"])
-def task():
-    # Get POST data
-    data = request.get_json()
-    param = data.get("type")
-
-    if param == "email":
-        send_email("Testing the Connection", "Hello, here is your latest news digest")
-        return jsonify({"message": "Sent the email!"}), 202
-    else:
-        return (
-            jsonify({"error": 'Failed to start task. Requires search_type of "task"'}),
-            500,
-        )
-
-
-@huey.periodic_task(crontab(minute="21", hour="05"))
-def content_search():
+def search_and_match_terms():
     logger = app.logger
     query = SearchTerm.select()
     links = []
@@ -87,7 +72,6 @@ def content_search():
     for source in SEARCHERS:
         try:
             results = source.search(query)
-            logger.info("Matched %s results", len(results))
         except:
             logger.exception("Error fetching %s", source.url)
         else:
@@ -97,10 +81,50 @@ def content_search():
                     SavedLink.create(title=result.title, url=result.url)
                     links.append(result)
 
+    return links
+
+
+@huey.task()
+def preview_digest():
+    logger = app.logger
+    links = search_and_match_terms()
     if links:
-        logger.info("Found %s links", len(links))
+        print(
+            f"Found {len(links)} links",
+        )
         digest = "\n".join('"%s"  ->  %s' % (link.title, link.url) for link in links)
+        logger.info("Digest Preview: %s", digest)
+    else:
+        print("Could not find any results :(")
+
+
+@huey.periodic_task(crontab(minute="21", hour="05"))
+def send_digest():
+    logger = app.logger
+    links = search_and_match_terms()
+    if links:
+        print("Found %s links", len(links))
+        digest = "\n".join('"%s"  ->  %s' % (link.title, link.url) for link in links)
+        logger.info("Digest Preview: %s", digest)
         send_email("Your Latest Programming News digest", digest)
+    else:
+        print("Could not find any results :(")
+
+
+@app.route("/task", methods=["POST"])
+def task():
+    # Get POST data
+    data = request.get_json()
+    param = data.get("type")
+
+    if param == "email":
+        result = preview_digest.call_local()
+        return jsonify({"message": "Done!"}), 202
+    else:
+        return (
+            jsonify({"error": 'Failed to start task. Requires search_type of "task"'}),
+            500,
+        )
 
 
 if __name__ == "__main__":
