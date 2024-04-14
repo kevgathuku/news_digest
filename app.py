@@ -89,13 +89,11 @@ def preview_digest():
     logger = app.logger
     links = search_and_match_terms()
     if links:
-        print(
-            f"Found {len(links)} links",
-        )
         digest = "\n".join('"%s"  ->  %s' % (link.title, link.url) for link in links)
         logger.info("Digest Preview: %s", digest)
     else:
         print("Could not find any results :(")
+    return links
 
 
 @huey.periodic_task(crontab(minute="21", hour="05"))
